@@ -19,9 +19,7 @@ public:
 		, _m_vsync_estimate{sb->get_reader<switchboard::event_wrapper<time_point>>("vsync_estimate")}
     { }
 
-    // No parameter get_fast_pose() should just predict to the next vsync
-    // However, we don't have vsync estimation yet.
-    // So we will predict to `now()`, as a temporary approximation
+    // No parameter get_fast_pose() predicts to the next vsync estimate, if one exists, otherwise predicts to 'now'
     virtual fast_pose_type get_fast_pose() const override {
         switchboard::ptr<const switchboard::event_wrapper<time_point>> vsync_estimate = _m_vsync_estimate.get_ro_nullable();
 
@@ -60,18 +58,18 @@ public:
     virtual fast_pose_type get_fast_pose(time_point future_timestamp) const override {
         switchboard::ptr<const pose_type> slow_pose = _m_slow_pose.get_ro_nullable();
         if (slow_pose == nullptr) {
-            // No slow pose, return 0
+            // No slow pose, return identity pose
             return fast_pose_type{
-                correct_pose(pose_type{}),
-                _m_clock->now(),
-                future_timestamp,
+                .pose = correct_pose(pose_type{}),
+                .predict_computed_time = _m_clock->now(),
+                .predict_target_time = future_timestamp,
             };
         }
 
         switchboard::ptr<const imu_raw_type> imu_raw = _m_imu_raw.get_ro_nullable();
         if (imu_raw == nullptr) {
 #ifndef NDEBUG
-            printf("FAST POSE IS SLOW POSE!\n");
+            printf("Fast pose is slow pose!\n");
 #endif
             // No imu_raw, return slow_pose
             return fast_pose_type{
@@ -81,16 +79,14 @@ public:
             };
         }
 
-        // slow_pose and imu_raw, do pose prediction
-
+        // Both slow_pose and imu_raw are available, do pose prediction
         double dt = duration2double(future_timestamp - imu_raw->imu_time);
         std::pair<Eigen::Matrix<double,13,1>, time_point> predictor_result = predict_mean_rk4(dt);
-
         auto state_plus = predictor_result.first;
 
         // predictor_imu_time is the most recent IMU sample that was used to compute the prediction.
         auto predictor_imu_time = predictor_result.second;
-        
+
         pose_type predicted_pose = correct_pose({
             predictor_imu_time,
             Eigen::Vector3f{
@@ -117,8 +113,8 @@ public:
         }
 
         // Several timestamps are logged:
-        //       - the prediction compute time (time when this prediction was computed, i.e., now)
-        //       - the prediction target (the time that was requested for this pose.)
+        // - the prediction compute time (time when this prediction was computed, i.e., now)
+        // - the prediction target (the time that was requested for this pose.)
         return fast_pose_type {
             .pose = predicted_pose,
             .predict_computed_time = _m_clock->now(),
@@ -164,9 +160,8 @@ public:
     }
 
     virtual bool true_pose_reliable() const override {
-        //return _m_true_pose.valid();
         /*
-          We do not have a "ground truth" available in all cases, such
+          We do not have a ground truth available in all cases, such
           as when reading live data.
          */
         return bool(_m_true_pose.get_ro_nullable());
@@ -176,20 +171,20 @@ public:
         return offset;
     }
 
-    // Correct the orientation of the pose due to the lopsided IMU in the 
+    // Correct the orientation of the pose due to the lopsided IMU in the
     // current Dataset we are using (EuRoC)
     virtual pose_type correct_pose(const pose_type pose) const override {
         pose_type swapped_pose;
 
         // Make any changes to the axes direction below
-        // This is a mapping between the coordinate system of the current 
+        // This is a mapping between the coordinate system of the current
         // SLAM (OpenVINS) we are using and the OpenGL system.
         swapped_pose.position.x() = -pose.position.y();
         swapped_pose.position.y() = pose.position.z();
         swapped_pose.position.z() = -pose.position.x();
 
         // Make any chanes to orientation of the output below
-        // For the dataset were currently using (EuRoC), the output orientation acts as though 
+        // For the dataset were currently using (EuRoC), the output orientation acts as though
         // the "top of the head" is the forward direction, and the "eye direction" is the up direction.
         Eigen::Quaternionf raw_o (pose.orientation.w(), -pose.orientation.y(), pose.orientation.z(), -pose.orientation.x());
 
@@ -210,7 +205,6 @@ private:
     switchboard::reader<switchboard::event_wrapper<time_point>> _m_vsync_estimate;
 	mutable Eigen::Quaternionf offset {Eigen::Quaternionf::Identity()};
 	mutable std::shared_mutex offset_mutex;
-    
 
     // Slightly modified copy of OpenVINS method found in propagator.cpp
     // Returns a pair of the predictor state_plus and the time associated with the
