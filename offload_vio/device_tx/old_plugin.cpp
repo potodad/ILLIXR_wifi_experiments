@@ -60,12 +60,7 @@ public:
 
 		assert(datum->time.time_since_epoch().count() > previous_timestamp);
 		previous_timestamp = datum->time.time_since_epoch().count();
-		
-		// at initialization we need to add here.
-		if(data_buffer == nullptr){
-		   data_buffer = data_buffer_arr->add_imucamentry();
-		}
-               //vio_input_proto::IMUCamVec* data_buffer; 
+
 		vio_input_proto::IMUCamData* imu_cam_data = data_buffer->add_imu_cam_data();
 		imu_cam_data->set_timestamp(datum->time.time_since_epoch().count());
 
@@ -98,51 +93,40 @@ public:
 			data_buffer->set_dataset_timestamp(datum->dataset_time.time_since_epoch().count());
 			data_buffer->set_frame_id(frame_id);
 			
-			// ok upto this point is regular stuff. Now we need to decide what to do with currently aggregated stuff
-			aggrcnt++;
-		        
-		          
 			// Prepare data delivery
-			if(aggrcnt == aggrfactor){
-			  string data_to_be_sent = data_buffer_arr->SerializeAsString();
-			  string delimitter = "END!";
+			string data_to_be_sent = data_buffer->SerializeAsString();
+			string delimitter = "END!";
 
-			  float created_to_sent = (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - datum->created_time) / 1e6;
-			  // For packet dropping experiments. To disable it, replace the condition with "false".
-			  if (created_to_sent > 100) {
+			float created_to_sent = (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - datum->created_time) / 1e6;
+			// For packet dropping experiments. To disable it, replace the condition with "false".
+			if (created_to_sent > 100) {
 				std::cout << "Created to Send > 100\n";
 				frame_info << frame_id << "," << created_to_sent << ",0,1" << endl;
-			  } else {
+			} else {
 				auto start = timestamp();
 				socket.write(data_to_be_sent + delimitter);
 				auto send_duration = timestamp() - start;
-				frame_info << frame_id << "," << created_to_sent << "," << send_duration << ",0" << endl;// note because of aggregation we will now be seeing only steps of aggrcnt
+				frame_info << frame_id << "," << created_to_sent << "," << send_duration << ",0" << endl;
 
-				//hash<std::string> hasher;
-				//auto hash_result = hasher(data_to_be_sent);
-				//hashed_data << frame_id << "\t" << hash_result << "\t" << data_buffer->dataset_timestamp() << endl;
-		         }
-
-			  // auto start = timestamp();
-			 // socket.write(data_to_be_sent + delimitter);
-			  // auto send_duration = timestamp() - start;
-			  // cam_data_created_to_send_time << created_to_sent << endl;
-			  // cout << "Frame id = " << frame_id << ", send time = " << send_duration << ", created_to_send = " << created_to_sent << endl;
-
-			  hash<std::string> hasher;
-			  auto hash_result = hasher(data_to_be_sent);
-			  hashed_data << frame_id << "\t" << hash_result << "\t" << data_buffer->dataset_timestamp() << endl;
-			  delete data_buffer_arr;
-			  data_buffer_arr = new vio_input_proto::IMUCamVecs();
+				hash<std::string> hasher;
+				auto hash_result = hasher(data_to_be_sent);
+				hashed_data << frame_id << "\t" << hash_result << "\t" << data_buffer->dataset_timestamp() << endl;
 			}
-			frame_id++;
-                       aggrcnt = aggrcnt % aggrfactor;
-			//delete data_buffer;
-			data_buffer = data_buffer_arr->add_imucamentry();
-			
 
+			// auto start = timestamp();
+			// socket.write(data_to_be_sent + delimitter);
+			// auto send_duration = timestamp() - start;
+			// cam_data_created_to_send_time << created_to_sent << endl;
+			// cout << "Frame id = " << frame_id << ", send time = " << send_duration << ", created_to_send = " << created_to_sent << endl;
+
+			hash<std::string> hasher;
+			auto hash_result = hasher(data_to_be_sent);
+			hashed_data << frame_id << "\t" << hash_result << "\t" << data_buffer->dataset_timestamp() << endl;
 			
-			
+			frame_id++;
+
+			delete data_buffer;
+			data_buffer = new vio_input_proto::IMUCamVec();
 		}
 		
     }
@@ -150,12 +134,8 @@ public:
 private:
 	long previous_timestamp = 0;
 	int frame_id = 0;
-	vio_input_proto::IMUCamVec* data_buffer = nullptr;//new vio_input_proto::IMUCamVec();
-	vio_input_proto::IMUCamVecs* data_buffer_arr = new vio_input_proto::IMUCamVecs();
-	
+	vio_input_proto::IMUCamVec* data_buffer = new vio_input_proto::IMUCamVec();
     const std::shared_ptr<switchboard> sb;
-        int aggrfactor = 1;// this determines how many IMUCamvec to aggregate
-        int aggrcnt = 0;
 
 	TCPSocket socket;
 	Address server_addr;

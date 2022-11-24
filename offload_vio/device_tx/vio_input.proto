@@ -26,3 +26,8 @@ message IMUCamVec {
   fixed64 dataset_timestamp = 3;
   int32 frame_id = 4;
 }
+
+
+message IMUCamVecs {
+  repeated IMUCamVec imucamentry = 1;
+}

@@ -61,7 +61,7 @@ public:
 					buffer_str = buffer_str.substr(end_position + delimitter.size());
 					// cout << "Complete response = " << before.size() << endl;
 					// process the data
-					vio_input_proto::IMUCamVecs vio_input;
+					vio_input_proto::IMUCamVec vio_input;
 					bool success = vio_input.ParseFromString(before);
 					if (!success) {
 						cout << "Error parsing the protobuf, vio input size = " << before.size() << endl;
@@ -69,8 +69,8 @@ public:
 						// cout << "Received the protobuf data!" << endl;
 						hash<std::string> hasher;
 						auto hash_result = hasher(before);
-						hashed_data << vio_input.imucamentry(vio_input.imucamentry_size()-1).frame_id() << "\t" << hash_result << endl;//so, this marks the last frame id in the aggregate
-						
+						hashed_data << vio_input.frame_id() << "\t" << hash_result << endl;
+						cout << "Receive frame id = " << vio_input.frame_id() << endl;
 						ReceiveVioInput(vio_input);
 					}
 					end_position = buffer_str.find(delimitter);
@@ -85,19 +85,15 @@ public:
 	}
 
 private:
-	void ReceiveVioInput(const vio_input_proto::IMUCamVecs& vio_inputs) {	
+	void ReceiveVioInput(const vio_input_proto::IMUCamVec& vio_input) {	
 
 		// Logging
 		unsigned long long curr_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		double sec_to_trans = (curr_time - vio_input.real_timestamp()) / 1e9;
+		receive_time << vio_input.frame_id() << "," << vio_input.real_timestamp() << "," << sec_to_trans * 1e3 << std::endl;
 
-
-		// Loop through all IMU values first then the cam frame
-		for (int jj = 0; jj < vio_inputs.imucamentry_size(); jj++){
-		  vio_input_proto::IMUCamVec vio_input = vio_inputs.imucamentry(jj);	
-		  double sec_to_trans = (curr_time - vio_input.real_timestamp()) / 1e9;
-		  receive_time << vio_input.frame_id() << "," << vio_input.real_timestamp() << "," << sec_to_trans * 1e3 << std::endl;
-		  cout << "Receive frame id = " << vio_input.frame_id() << endl;		  
-		  for (int i = 0; i < vio_input.imu_cam_data_size(); i++) {
+		// Loop through all IMU values first then the cam frame	
+		for (int i = 0; i < vio_input.imu_cam_data_size(); i++) {
 			vio_input_proto::IMUCamData curr_data = vio_input.imu_cam_data(i);
 
 			std::optional<cv::Mat> cam0 = std::nullopt;
@@ -130,8 +126,7 @@ private:
 					cam1
 				}
 			));	
-		     }
-		   }
+		}
 
 		// unsigned long long after_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		// double sec_to_push = (after_time - curr_time) / 1e9;
