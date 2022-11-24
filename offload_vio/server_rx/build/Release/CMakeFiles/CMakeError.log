@@ -1,0 +1,64 @@
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
+Change Dir: /home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_62fcb/fast && make[1]: Entering directory '/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp'
+/usr/bin/make  -f CMakeFiles/cmTC_62fcb.dir/build.make CMakeFiles/cmTC_62fcb.dir/build
+make[2]: Entering directory '/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_62fcb.dir/src.c.o
+/usr/bin/clang-10 -DCMAKE_HAVE_LIBC_PTHREAD   -MD -MT CMakeFiles/cmTC_62fcb.dir/src.c.o -MF CMakeFiles/cmTC_62fcb.dir/src.c.o.d -o CMakeFiles/cmTC_62fcb.dir/src.c.o -c /home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_62fcb
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_62fcb.dir/link.txt --verbose=1
+/usr/bin/clang-10 CMakeFiles/cmTC_62fcb.dir/src.c.o -o cmTC_62fcb 
+/usr/bin/ld: CMakeFiles/cmTC_62fcb.dir/src.c.o: in function `main':
+src.c:(.text+0x25): undefined reference to `pthread_create'
+/usr/bin/ld: src.c:(.text+0x31): undefined reference to `pthread_detach'
+/usr/bin/ld: src.c:(.text+0x3d): undefined reference to `pthread_cancel'
+/usr/bin/ld: src.c:(.text+0x4f): undefined reference to `pthread_join'
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+make[2]: *** [CMakeFiles/cmTC_62fcb.dir/build.make:100: cmTC_62fcb] Error 1
+make[2]: Leaving directory '/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp'
+make[1]: *** [Makefile:127: cmTC_62fcb/fast] Error 2
+make[1]: Leaving directory '/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+#include <pthread.h>
+
+static void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_cancel(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_1dd32/fast && make[1]: Entering directory '/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp'
+/usr/bin/make  -f CMakeFiles/cmTC_1dd32.dir/build.make CMakeFiles/cmTC_1dd32.dir/build
+make[2]: Entering directory '/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_1dd32.dir/CheckFunctionExists.c.o
+/usr/bin/clang-10   -DCHECK_FUNCTION_EXISTS=pthread_create -MD -MT CMakeFiles/cmTC_1dd32.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_1dd32.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_1dd32.dir/CheckFunctionExists.c.o -c /usr/share/cmake-3.24/Modules/CheckFunctionExists.c
+Linking C executable cmTC_1dd32
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1dd32.dir/link.txt --verbose=1
+/usr/bin/clang-10  -DCHECK_FUNCTION_EXISTS=pthread_create CMakeFiles/cmTC_1dd32.dir/CheckFunctionExists.c.o -o cmTC_1dd32  -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+make[2]: *** [CMakeFiles/cmTC_1dd32.dir/build.make:100: cmTC_1dd32] Error 1
+make[2]: Leaving directory '/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp'
+make[1]: *** [Makefile:127: cmTC_1dd32/fast] Error 2
+make[1]: Leaving directory '/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_rx/build/Release/CMakeFiles/CMakeTmp'
+
+
+

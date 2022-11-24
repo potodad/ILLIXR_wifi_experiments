@@ -1,0 +1,1 @@
+/usr/bin/clang++-10 -fPIC -O2 -g -DNDEBUG -shared -Wl,-soname,libplugin.so -o libplugin.so CMakeFiles/plugin.dir/plugin.cpp.o CMakeFiles/plugin.dir/protobuf/vio_output.pb.cc.o  /usr/lib/x86_64-linux-gnu/libecal_core.so.5.10.2 /usr/lib/x86_64-linux-gnu/libprotobuf.so /usr/lib/x86_64-linux-gnu/libecal_proto.a /usr/lib/x86_64-linux-gnu/libprotobuf.so -lpthread 

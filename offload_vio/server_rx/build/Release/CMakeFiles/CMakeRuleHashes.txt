@@ -1,0 +1,2 @@
+# Hashes of file build rules.
+3c0e299c3735cda7a24812c5f30d6161 protobuf/vio_input.pb.cc

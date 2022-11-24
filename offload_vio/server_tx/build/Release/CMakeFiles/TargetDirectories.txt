@@ -1,0 +1,3 @@
+/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_tx/build/Release/CMakeFiles/plugin.dir
+/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_tx/build/Release/CMakeFiles/edit_cache.dir
+/home/wtsn-client/Dynamicqos/ILLIXR_wifi_experiments/offload_vio/server_tx/build/Release/CMakeFiles/rebuild_cache.dir
